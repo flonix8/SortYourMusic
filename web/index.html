@@ -175,6 +175,8 @@
                                 <li><a id='dropOverwrite' href='#'>Overwrite Playlist</a></li>
                               </ul>
                             </div>
+                            <a class="btn btn-primary btn-sm pull-right" id='download-csv'
+                                role="button">Download as CSV</a>
 
                             <a class="btn btn-primary btn-sm pull-left" id='pick'
                                 role="button">back</a>
@@ -1015,6 +1017,27 @@ function initTable() {
     return table;
 }
 
+function triggerCsvDownload() {
+    var data = "";
+    var tableData = [];
+    var rows = $("#song-table tr");
+    rows.each(function(index, row) {
+      var rowData = [];
+      $(row).find("th, td").each(function(index, column) {
+        rowData.push(column.innerText);
+      });
+      tableData.push(rowData.join(";"));
+    });
+    data += tableData.join("\n");
+    $(document.body).append('<a id="download-link" download="data.csv" style="display:none" href=' + URL.createObjectURL(new Blob([data], {
+      type: "text/csv"
+    })) + '/>');
+
+
+    $('#download-link')[0].click();
+    $('#download-link').remove();
+}
+
 $(document).ready(
 
     function() {
@@ -1058,6 +1081,10 @@ $(document).ready(
 
         $("#pick").on('click', function() {
             showPlaylists();
+        });
+
+        $('#download-csv').on('click', function() {
+            triggerCsvDownload();
         });
 
         $.fn.dataTable.ext.search.push(playlistFilter);
