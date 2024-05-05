@@ -802,13 +802,12 @@ function inRange(val, min, max) {
 }
 
 function playlistFilter( settings, data, dataIndex ) {
-    var minBpm = parseInt( $('#min-bpm').val(), 10 );
+    var minBpm = getMinBPM();
     var maxBpm = parseInt( $('#max-bpm').val(), 10 );
-    var includeDouble = $('#include-double').is(':checked');
     var bpm = parseFloat( data[4] ) || 0;
 
     return inRange(bpm, minBpm, maxBpm) || 
-        (includeDouble && inRange(bpm*2, minBpm, maxBpm));
+        (shouldIncludeDoubledBPM() && inRange(bpm*2, minBpm, maxBpm));
 }
 
 function playTrack(track) {
@@ -935,9 +934,9 @@ function getPlaylistState() {
     }
 
     return { 
-        minBpm: parseInt( $('#min-bpm').val(), 10 ),
+        minBpm: getMinBPM(),
         maxBpm: parseInt( $('#max-bpm').val(), 10 ),
-        includeDouble: $('#include-double').is(':checked'),
+        includeDouble: shouldIncludeDoubledBPM(),
         order: firstOrder,
     };
 }
@@ -1017,21 +1016,44 @@ function initTable() {
     return table;
 }
 
+function shouldIncludeDoubledBPM() {
+    return $('#include-double').is(':checked');
+}
+
+function getMinBPM() {
+    return parseInt( $('#min-bpm').val(), 10 );
+}
+
+function fixBPM(bpmValue) {
+    if (bpmValue < getMinBPM()) {
+        return bpmValue * 2;
+    } else {
+        return bpmValue;
+    }
+}
+
 function triggerCsvDownload() {
     var data = "";
     var tableData = [];
     var rows = $("#song-table tr");
     rows.each(function(index, row) {
-      var rowData = [];
+      var rowData = []; 
       $(row).find("th, td").each(function(index, column) {
-        rowData.push(column.innerText);
+        // Fix BPM
+        if (index === 4 && shouldIncludeDoubledBPM()) {
+            rowData.push(fixBPM(column.innerText))
+        } else {
+            rowData.push(column.innerText);
+        }
       });
       tableData.push(rowData.join(";"));
     });
     data += tableData.join("\n");
-    $(document.body).append('<a id="download-link" download="data.csv" style="display:none" href=' + URL.createObjectURL(new Blob([data], {
-      type: "text/csv"
-    })) + '/>');
+    $(document.body).append(`<a id="download-link" download="${curPlaylist.name}.csv" style="display:none" href=${URL.createObjectURL(new Blob(
+        [
+            new Uint8Array([0xEF, 0xBB, 0xBF]), // UTF-8 BOM, s.t. Excel opens it correctly in UTF-8 mode
+            data
+        ], {type: "text/csv"}))}/>`);
 
 
     $('#download-link')[0].click();
