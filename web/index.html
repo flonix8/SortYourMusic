@@ -1048,14 +1048,13 @@ function triggerCsvDownload() {
       });
       tableData.push(rowData.join(";"));
     });
+
     data += tableData.join("\n");
-    $(document.body).append(`<a id="download-link" download="${curPlaylist.name}.csv" style="display:none" href=${URL.createObjectURL(new Blob(
-        [
-            new Uint8Array([0xEF, 0xBB, 0xBF]), // UTF-8 BOM, s.t. Excel opens it correctly in UTF-8 mode
-            data
-        ], {type: "text/csv"}))}/>`);
-
-
+    $(document.body).append(`<a id="download-link" download="${curPlaylist.name}.csv" style="display:none" href=${URL.createObjectURL(new Blob([
+        new Uint8Array([0xEF, 0xBB, 0xBF]), // UTF-8 BOM, s.t. Excel opens it correctly in UTF-8 mode
+        data
+    ], {type: "text/csv"}))}/>`);
+    
     $('#download-link')[0].click();
     $('#download-link').remove();
 }
